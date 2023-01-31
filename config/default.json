@@ -1,3 +1,8 @@
 {
-    "jwtPrivateKey": ""
+  "PG_USER": "postgres",
+  "PG_HOST": "localhost",
+  "PG_DATABASE": "vidly",
+  "PG_PORT": 5432,
+  "PG_PASSWORD": "ahmed",
+  "JWT_SECRET":"this is jwt secret"
 }

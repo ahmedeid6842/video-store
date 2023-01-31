@@ -1,12 +1,11 @@
-const winston = require('winston');
+const logger = require('./utils/logger');
 const express = require('express');
 const app = express();
 
-require('./startup/logging');
+require("express-async-errors");
+require('./startup/unHandledCaught')();
 require('./startup/routes')(app);
-require('./startup/db')();
 require('./startup/config')();
-require('./startup/validation')();
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => winston.info(`Listening on port ${port}...`));
+app.listen(port, () => logger.info(`Listening on port ${port}... 🚀 🐘 `));
