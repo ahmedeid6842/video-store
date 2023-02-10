@@ -4,5 +4,6 @@
   "PG_DATABASE": "vidly",
   "PG_PORT": 5432,
   "PG_PASSWORD": "ahmed",
-  "JWT_SECRET":"this is jwt secret"
+  "JWT_SECRET":"this is jwt secret",
+  "PORT":3000
 }
