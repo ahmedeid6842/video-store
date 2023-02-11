@@ -28,10 +28,10 @@ CREATE TABLE movies(
 
 CREATE TABLE rentals(
     customer_id INT REFERENCES customers(customer_id) ON DELETE cascade,
-    movie_id INT REFERENCES movies(moive_id) ON DELETE cascade,
+    movie_id INT REFERENCES movies(movie_id) ON DELETE cascade,
     dateOut DATE DEFAULT now(), 
     dateReturned DATE ,
     rentalFee INT,
-    PRIMARY KEY (customer_id,moive_id)
+    PRIMARY KEY (customer_id,movie_id)
 );
 

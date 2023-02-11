@@ -9,7 +9,7 @@ export const createMovieSchema = zod.object({
     .min(5, "movie title too short - should be at least 5 length")
     .max(50, "movie title too long - should be at least 50 length "),
   genreId: zod
-    .number({
+    .string({
       required_error: "movie genre Id is required",
     })
     .refine(isValidGenreId, (val) => ({ message: `${val} invalid genreID` })),
@@ -25,7 +25,7 @@ export const updateMovieSchema = createMovieSchema.partial();
 
 export const validMovieIdParam = zod.object({
   id: zod
-    .number({
+    .string({
       required_error: "movie id parameter is required",
     })
     .refine(isValidMovieId, (val) => ({ message: `${val} invalid movieID` })),
