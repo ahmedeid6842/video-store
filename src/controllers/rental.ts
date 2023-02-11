@@ -9,7 +9,7 @@ import {
   addRental,
   updateRentalFee,
 } from "../database/queries/rental";
-import { getMovie, updateMovie } from "../database/queries/movie";
+import { getMovie, updateMovie,updateMovieNumberInStock } from "../database/queries/movie";
 
 import { rentalPrice } from "../utils/rentalPrice";
 import { createRentalInput } from "src/validators/rental";
@@ -75,6 +75,8 @@ export const backRentalController = async (
    * DONE: validate if rental exist or not
    * DONE: calculate rental price using rentalPrice util function
    * DONE: update rental table to contain movie's date returned and rental fee
+   * DONE: update movie number in stock 
+   * DONE: add transaction to commit both update movie and rental
    * DONE: return the rental
    */
   let rental = await pool.query(getRental, [
@@ -82,12 +84,16 @@ export const backRentalController = async (
     req.params.movieId,
   ]);
   if (!rental.rows.length) return res.status(404).send("no rental found");
+  
+  await pool.query("BEGIN");
+  
+  await pool.query(pg_format(updateMovieNumberInStock, 1, req.params.movieId));
 
   const rentalFee = rentalPrice(
     rental.rows[0].dateOut,
     rental.rows[0].dailyrentalrate
   );
-  console.log(rentalFee.toFixed(2));
+
   rental = await pool.query(updateRentalFee, [
     rentalFee.toFixed(2),
     moment().format("YYYY-MM-DD"),
@@ -95,5 +101,7 @@ export const backRentalController = async (
     req.params.movieId,
   ]);
 
+  await pool.query("COMMIT");
+  
   return res.send(rental.rows[0]);
 };
