@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev":"nodemon src/server.ts",
+    "dev": "nodemon src/server.ts",
     "start": "ts-node src/server.ts",
     "build": "npm install"
   },
@@ -15,11 +15,9 @@
     "config": "^3.3.1",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
-    "joi": "^14.3.1",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
     "moment": "^2.29.4",
-    "mongoose": "^5.9.9",
     "pg": "^8.9.0",
     "pg-format": "^1.0.4",
     "winston": "^3.2.1",
