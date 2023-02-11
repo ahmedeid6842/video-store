@@ -25,7 +25,7 @@ export const updateMovieSchema = createMovieSchema.partial();
 
 export const validMovieIdParam = zod.object({
   id: zod
-    .string({
+    .number({
       required_error: "movie id parameter is required",
     })
     .refine(isValidMovieId, (val) => ({ message: `${val} invalid movieID` })),
