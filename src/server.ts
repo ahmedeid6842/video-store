@@ -1,3 +1,4 @@
+import "express-async-errors";
 import express from "express";
 import config from "config";
 import User from "./routes/user";
@@ -6,7 +7,7 @@ import Customer from "./routes/customer";
 import Genre from "./routes/genre";
 import Rental from "./routes/rental";
 import { log } from "./utils/logger";
-import "express-async-errors";
+import { errorHandlerMiddleware } from "./middleware/errorHandler";
 const app = express();
 
 process.on("uncaughtException", (ex: any) => {
@@ -25,6 +26,7 @@ app.use("/api/movie", Movie);
 app.use("/api/customer", Customer);
 app.use("/api/genre", Genre);
 app.use("/api/rental", Rental);
+app.use(errorHandlerMiddleware);
 
 const port = config.get<number>("PORT") || 3000;
 app.listen(port, () => console.log(`server start at port ${port} 🚀 🎯`));
