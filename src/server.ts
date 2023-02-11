@@ -5,8 +5,19 @@ import Movie from "./routes/movie";
 import Customer from "./routes/customer";
 import Genre from "./routes/genre";
 import Rental from "./routes/rental";
-
+import { log } from "./utils/logger";
+import "express-async-errors";
 const app = express();
+
+process.on("uncaughtException", (ex: any) => {
+  log.error(ex.message);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (ex: any) => {
+  log.error(ex.message);
+  process.exit(1);
+});
 
 app.use(express.json());
 app.use("/api/user", User);

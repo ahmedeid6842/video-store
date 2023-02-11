@@ -42,20 +42,24 @@ export const loginController = async (
    * DONE: compare passwords
    * DONE: every thing is ok ? return token and user data : return 400 error
    */
-  const { email, password } = req.body;
-  let user = await pool.query(pg_format(getUser, "email", email));
-  if (!user.rows.length)
-    return res.status(400).send("invalid user name or password");
+  try {
+    const { email, password } = req.body;
+    let user = await pool.query(pg_format(getUser, "email", email));
+    if (!user.rows.length)
+      return res.status(400).send("invalid user name or password");
 
-  const validPassword = await bcrypt.compare(password, user.rows[0].password);
-  if (!validPassword)
-    return res.status(400).send("invalid user name or password");
-  const token = createToken({
-    _id: user.rows[0].user_id,
-    isAdmin: user.rows[0].isadmin,
-  });
+    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    if (!validPassword)
+      return res.status(400).send("invalid user name or password");
+    const token = createToken({
+      _id: user.rows[0].user_id,
+      isAdmin: user.rows[0].isadmin,
+    });
 
-  return res
-    .header("x-auth-token", token)
-    .send(_.pick(user.rows[0], ["name", "email"]) as User);
+    return res
+      .header("x-auth-token", token)
+      .send(_.pick(user.rows[0], ["name", "email"]) as User);
+  } catch (error) {
+    throw new Error(error);
+  }
 };
