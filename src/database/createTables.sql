@@ -31,7 +31,7 @@ CREATE TABLE rentals(
     movie_id INT REFERENCES movies(movie_id) ON DELETE cascade,
     dateOut DATE DEFAULT now(), 
     dateReturned DATE ,
-    rentalFee INT,
+    rentalFee DECIMAL,
     PRIMARY KEY (customer_id,movie_id)
 );
 

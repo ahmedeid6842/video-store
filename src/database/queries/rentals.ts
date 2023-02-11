@@ -23,8 +23,8 @@ SELECT
     c.phone as customer_phone
     FROM rentals r 
 JOIN  movies m USING(movie_id)
-JOIN customers c USING(customer_id)
-WHERE c.customer_id = $1 AND m.movie_id = $2;
+JOIN customers c USING(customer_id);
+WHERE c.customer_id = $1 AND m.movie_id = $2
 `;
 
 export const addRental = `
@@ -37,11 +37,12 @@ RETURNING *
 export const updateRentalFee = `
 UPDATE rentals 
 SET 
-    rentalfee = $1,
-    dateReturned = $2 
+    rentalFee = $1 
+ AND
+    dateReturned = $2 ,
 WHERE
     customer_id = $3 
  AND
     movie_id = $4 
-RETURNING * ;
+RETUNING * 
 `;
