@@ -1,4 +1,4 @@
 export type jwtPayload = {
-  _id: string;
+  _id: number;
   isAdmin?: boolean;
 };

@@ -1,15 +1,14 @@
 import { Request, Response } from "express";
-import pg_format from "pg-format";
 import bcrypt from "bcrypt";
 import _ from "lodash";
+import { UserType } from "../types/User";
 import { loginInput, registerInput } from "../validators/user";
-import pool from "../database/connect";
-import { User } from "../types/User";
-import { createUser, getUser } from "../database/queries/user";
+import { User } from "../database/entities/index";
 import { createToken } from "../utils/token";
+
 export const registerController = async (
   req: Request<{}, {}, registerInput>,
-  res: Response<User | string>
+  res: Response<UserType | string>
 ) => {
   /**
    * DONE: validate request body to match regsiter criteria
@@ -18,23 +17,30 @@ export const registerController = async (
    * DONE: send jwt and created user
    */
   let { name, email, password } = req.body;
-  let user = await pool.query(pg_format(getUser, "email", email));
-  if (user.rows.length) return res.status(400).send("email already exist");
+  let userExist = await User.findOne({ where: { email } });
+  if (userExist) return res.status(400).send("email already exist");
 
   const salt = await bcrypt.genSalt(10);
   password = await bcrypt.hash(password, salt);
+  [name, email, password];
 
-  user = await pool.query(createUser, [name, email, password]);
+  let user = await User.createQueryBuilder()
+    .insert()
+    .into(User)
+    .values({ name, email, password })
+    .returning("*")
+    .execute();
 
-  const token = createToken({ _id: user.rows[0] });
+  const token = createToken({ _id: user.raw[0].user_id });
+
   return res
     .header("x-auth-token", token)
-    .send(_.pick(user.rows[0], ["name", "email"]) as User);
+    .send(_.pick(user.raw[0], ["name", "email"]) as UserType);
 };
 
 export const loginController = async (
   req: Request<{}, {}, loginInput>,
-  res: Response<User | string>
+  res: Response<UserType | string>
 ) => {
   /**
    * DONE: validate reqeust body to match login criteria
@@ -44,21 +50,21 @@ export const loginController = async (
    */
   try {
     const { email, password } = req.body;
-    let user = await pool.query(pg_format(getUser, "email", email));
-    if (!user.rows.length)
-      return res.status(400).send("invalid user name or password");
+    let user = await User.findOne({ where: { email } });
+    if (!user) return res.status(400).send("invalid user name or password");
 
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword)
       return res.status(400).send("invalid user name or password");
+
     const token = createToken({
-      _id: user.rows[0].user_id,
-      isAdmin: user.rows[0].isadmin,
+      _id: user.user_id,
+      isAdmin: user.isAdmin,
     });
 
     return res
       .header("x-auth-token", token)
-      .send(_.pick(user.rows[0], ["name", "email"]) as User);
+      .send(_.pick(user, ["name", "email"]) as UserType);
   } catch (error) {
     throw new Error(error);
   }

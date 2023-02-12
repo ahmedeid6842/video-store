@@ -2,19 +2,23 @@ import pg_format from "pg-format";
 import { Request, Response } from "express";
 import moment from "moment";
 import pool from "../database/connect";
-import { Rental } from "../types/Rental";
+import { RentalType } from "../types/Rental";
 import {
   getRental,
   getRentals,
   addRental,
   updateRentalFee,
 } from "../database/queries/rental";
-import { getMovie, updateMovie,updateMovieNumberInStock } from "../database/queries/movie";
+import {
+  getMovie,
+  updateMovie,
+  updateMovieNumberInStock,
+} from "../database/queries/movie";
 
 import { rentalPrice } from "../utils/rentalPrice";
 import { createRentalInput } from "src/validators/rental";
 
-export const getRentalsContrller = async ({}, res: Response<Rental[]>) => {
+export const getRentalsContrller = async ({}, res: Response<RentalType[]>) => {
   /**
    * DONE: return all rentals in the shop
    */
@@ -24,7 +28,7 @@ export const getRentalsContrller = async ({}, res: Response<Rental[]>) => {
 
 export const getRentalController = async (
   req: Request<{ customerId: string; movieId: string }>,
-  res: Response<Rental | string>
+  res: Response<RentalType | string>
 ) => {
   /**
    * DONE: validate if rental exists or not
@@ -41,7 +45,7 @@ export const getRentalController = async (
 
 export const addRentalController = async (
   req: Request<{}, createRentalInput>,
-  res: Response<Rental | string>
+  res: Response<RentalType | string>
 ) => {
   /**
    * DONE: validate customerId and movieId body exists
@@ -69,13 +73,13 @@ export const addRentalController = async (
 
 export const backRentalController = async (
   req: Request<{ customerId: string; movieId: string }>,
-  res: Response<Rental | string>
+  res: Response<RentalType | string>
 ) => {
   /**
    * DONE: validate if rental exist or not
    * DONE: calculate rental price using rentalPrice util function
    * DONE: update rental table to contain movie's date returned and rental fee
-   * DONE: update movie number in stock 
+   * DONE: update movie number in stock
    * DONE: add transaction to commit both update movie and rental
    * DONE: return the rental
    */
@@ -84,9 +88,9 @@ export const backRentalController = async (
     req.params.movieId,
   ]);
   if (!rental.rows.length) return res.status(404).send("no rental found");
-  
+
   await pool.query("BEGIN");
-  
+
   await pool.query(pg_format(updateMovieNumberInStock, 1, req.params.movieId));
 
   const rentalFee = rentalPrice(
@@ -102,6 +106,6 @@ export const backRentalController = async (
   ]);
 
   await pool.query("COMMIT");
-  
+
   return res.send(rental.rows[0]);
 };
