@@ -2,7 +2,7 @@ import pool from "../database/connect";
 import pg_format from "pg-format";
 import { getGenre } from "../database/queries/genre";
 import { getMovie } from "../database/queries/movie";
-import { getCustomer } from "../database/queries/customer";
+import { Customer } from "../database/entities";
 
 export const isValidGenreId = async (genreId: string) => {
   const genre = await pool.query(pg_format(getGenre, "genre_id", genreId));
@@ -15,8 +15,7 @@ export const isValidMovieId = async (movieId: string) => {
 };
 
 export const isValidCustomerId = async (customerId: string) => {
-  const customer = await pool.query(
-    pg_format(getCustomer, "customer_id", customerId)
-  );
-  return customer.rows.length ? true : false;
+  const id: number = parseInt(customerId as string);
+  const customer = await Customer.findOne({ where: { customer_id: id } });
+  return customer ? true : false;
 };

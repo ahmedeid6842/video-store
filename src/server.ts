@@ -4,7 +4,7 @@ import config from "config";
 import createDataBaseConnection from "./database/connect";
 import User from "./routes/user";
 // import Movie from "./routes/movie";
-// import Customer from "./routes/customer";
+import Customer from "./routes/customer";
 // import Genre from "./routes/genre";
 // import Rental from "./routes/rental";
 import { log } from "./utils/logger";
@@ -23,8 +23,8 @@ process.on("unhandledRejection", (ex: any) => {
 
 app.use(express.json());
 app.use("/api/user", User);
+app.use("/api/customer", Customer);
 // app.use("/api/movie", Movie);
-// app.use("/api/customer", Customer);
 // app.use("/api/genre", Genre);
 // app.use("/api/rental", Rental);
 app.use(errorHandlerMiddleware);
