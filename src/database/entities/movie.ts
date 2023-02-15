@@ -7,8 +7,10 @@ import {
   PrimaryGeneratedColumn,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from "typeorm";
 import { Genre } from "./genre";
+import { Rental } from "./rental";
 
 @Entity("movies")
 export class Movie extends BaseEntity {
@@ -31,6 +33,9 @@ export class Movie extends BaseEntity {
     },
   })
   genres: Genre[];
+
+  @OneToMany(() => Rental, (rental) => rental.movie)
+  rentals: Rental[];
 
   @Column({ type: "int", default: 0.0 })
   numberInStock: number;

@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   getRentalsContrller,
-  getRentalController,
   addRentalController,
   backRentalController,
 } from "../controllers/rental";
@@ -11,8 +10,6 @@ const router = Router();
 
 router.get("/", getRentalsContrller);
 
-router.get("/:customerId/:movieId", getRentalController);
-
 router.post(
   "/",
   validateResource({
@@ -21,6 +18,6 @@ router.post(
   addRentalController
 );
 
-router.put("/back/:customerId/:movieId", backRentalController);
+router.put("/back/:rentalId", backRentalController);
 
 export default router;

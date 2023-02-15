@@ -1,6 +1,6 @@
 import { DataSource } from "typeorm";
 import config from "config";
-import { User, Customer, Genre, Movie } from "./entities";
+import { User, Customer, Genre, Movie, Rental } from "./entities";
 
 export default new DataSource({
   type: "postgres",
@@ -11,5 +11,5 @@ export default new DataSource({
   password: config.get<string>("PG_PASSWORD"),
   synchronize: process.env.NODE_ENV !== "production",
   logging: process.env.NODE_ENV !== "production",
-  entities: [User, Customer, Movie, Genre],
+  entities: [User, Customer, Movie, Genre, Rental],
 });

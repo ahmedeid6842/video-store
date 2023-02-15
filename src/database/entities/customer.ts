@@ -5,7 +5,9 @@ import {
   UpdateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from "typeorm";
+import { Rental } from "./rental";
 
 @Entity("customers")
 export class Customer extends BaseEntity {
@@ -26,4 +28,7 @@ export class Customer extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Rental,(rental)=>rental.customer)
+  rentals: Rental[];
 }
