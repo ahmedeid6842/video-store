@@ -5,9 +5,10 @@ import {
   UpdateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  OneToMany,
+  ManyToMany,
+  JoinTable,
 } from "typeorm";
-import { MovieGenre } from "./movies_genres";
+import { Genre } from "./genre";
 
 @Entity("movies")
 export class Movie extends BaseEntity {
@@ -17,10 +18,19 @@ export class Movie extends BaseEntity {
   @Column({ type: "varchar", length: 255, nullable: false })
   title: string;
 
-  @OneToMany(() => MovieGenre, (movie_genre) => movie_genre.movie, {
-    onDelete: "CASCADE",
+  @ManyToMany((type) => Genre, (genre) => genre.movies, { cascade: true })
+  @JoinTable({
+    name: "movies_genres",
+    joinColumn: {
+      name: "movie",
+      referencedColumnName: "movie_id",
+    },
+    inverseJoinColumn: {
+      name: "genre",
+      referencedColumnName: "genre_id",
+    },
   })
-  genres: MovieGenre[];
+  genres: Genre[];
 
   @Column({ type: "int", default: 0.0 })
   numberInStock: number;

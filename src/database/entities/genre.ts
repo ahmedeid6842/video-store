@@ -5,10 +5,10 @@ import {
   UpdateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  OneToMany,
+  JoinTable,
+  ManyToMany,
 } from "typeorm";
-
-import { MovieGenre } from "./movies_genres";
+import { Movie } from "./index";
 
 @Entity("genres")
 export class Genre extends BaseEntity {
@@ -18,8 +18,19 @@ export class Genre extends BaseEntity {
   @Column({ type: "varchar", length: 255 })
   name: string;
 
-  @OneToMany(() => MovieGenre, (movie_genre) => movie_genre.genre)
-  movies: MovieGenre[];
+  @ManyToMany(() => Movie, (movie) => movie.genres)
+  @JoinTable({
+    name: "movies_genres",
+    joinColumn: {
+      name: "genre",
+      referencedColumnName: "genre_id",
+    },
+    inverseJoinColumn: {
+      name: "movie",
+      referencedColumnName: "movie_id",
+    },
+  })
+  movies: Movie[];
 
   @CreateDateColumn()
   createdAt: Date;

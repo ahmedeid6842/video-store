@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { MovieGenre } from "../database/entities/movies_genres";
+import { In } from "typeorm";
 import { Genre, Movie } from "../database/entities";
 import { createMovieInput, updateMovieInput } from "../validators/movie";
 
@@ -18,21 +18,27 @@ export const getMovieController = async (
 
 export const createMovieController = async (
   req: Request<{}, {}, createMovieInput>,
-  res: Response<Omit<createMovieInput, "genreId"> | string>
+  res: Response<Movie | string>
 ) => {
   /**
    * DONE: validate request body to match create movie criteria
    * DONE: create movie
    * */
-  const genre = await Genre.findOne({ where: { genre_id: req.body.genreId } });
-  if (!genre) return res.status(404).send("invalid genreId");
+  let genres = await Genre.find({
+    where: { genre_id: In(req.body.genreId) },
+  });
 
-  const movie = await Movie.create(req.body).save();
-  const movie_genre = new MovieGenre();
-  movie_genre.genre = genre;
-  movie_genre.movie = movie;
-  movie_genre.save();
-  return res.send(movie);
+  if (genres.length < req.body.genreId.length)
+    return res.status(404).send("invalid genreId");
+
+  const movieEntry = {
+    ...req.body,
+    genres,
+  };
+
+  const movie2 = await Movie.create(movieEntry).save();
+
+  return res.send(movie2);
 };
 
 export const updateMovieController = async (
@@ -66,7 +72,7 @@ export const deleteMovieController = async (
    */
 
   const id: number = parseInt(req.params.id as string);
-  await Movie.createQueryBuilder('movies')
+  await Movie.createQueryBuilder("movies")
     .delete()
     .from(Movie)
     .where("movie_id=:id", { id })

@@ -5,7 +5,7 @@ import createDataBaseConnection from "./database/connect";
 import User from "./routes/user";
 import Movie from "./routes/movie";
 import Customer from "./routes/customer";
-// import Genre from "./routes/genre";
+import Genre from "./routes/genre";
 // import Rental from "./routes/rental";
 import { log } from "./utils/logger";
 import { errorHandlerMiddleware } from "./middleware/errorHandler";
@@ -25,7 +25,7 @@ app.use(express.json());
 app.use("/api/user", User);
 app.use("/api/customer", Customer);
 app.use("/api/movie", Movie);
-// app.use("/api/genre", Genre);
+app.use("/api/genre", Genre);
 // app.use("/api/rental", Rental);
 app.use(errorHandlerMiddleware);
 
