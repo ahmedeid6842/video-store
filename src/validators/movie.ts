@@ -1,4 +1,4 @@
-import { isValidGenreId, isValidMovieId } from "../utils/isValidId";
+import { isValidMovieId } from "../utils/isValidId";
 import zod from "zod";
 
 export const createMovieSchema = zod.object({
@@ -9,10 +9,10 @@ export const createMovieSchema = zod.object({
     .min(5, "movie title too short - should be at least 5 length")
     .max(50, "movie title too long - should be at least 50 length "),
   genreId: zod
-    .string({
+    .number({
       required_error: "movie genre Id is required",
     })
-    .refine(isValidGenreId, (val) => ({ message: `${val} invalid genreID` })),
+    .array().max(4).min(1),
   numberInStock: zod.number({
     required_error: "number of movies in stock is required",
   }),

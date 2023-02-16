@@ -1,3 +1,3 @@
 import { registerInput } from "../validators/user";
 
-export type User = Omit<registerInput, "password">;
+export type UserType = Omit<registerInput, "password">;

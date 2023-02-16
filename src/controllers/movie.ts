@@ -1,68 +1,81 @@
 import { Request, Response } from "express";
-import pg_format from "pg-format";
-import pool from "../database/connect";
-import {
-  createMovie,
-  deleteMovie,
-  getMovie,
-  updateMovie,
-} from "../database/queries/movie";
+import { In } from "typeorm";
+import { Genre, Movie } from "../database/entities";
 import { createMovieInput, updateMovieInput } from "../validators/movie";
 
 export const getMovieController = async (
-  req: Request<{ id: string }>,
-  res: Response<createMovieInput | string>
+  req: Request<{ id: number }>,
+  res: Response<Omit<createMovieInput, "genreId"> | string>
 ) => {
   /**
    * DONE: check if provided id found or not
    */
-  const movie = await pool.query(getMovie, [req.params.id]);
-  if (!movie.rows.length) return res.status(404).send("no file with that id ");
-  return res.send(movie.rows[0]);
+  const movie = await Movie.findOne({ where: { movie_id: req.params.id } });
+  if (!movie) return res.status(404).send("no file with that id ");
+
+  return res.send(movie);
 };
 
 export const createMovieController = async (
   req: Request<{}, {}, createMovieInput>,
-  res: Response<createMovieInput>
+  res: Response<Movie | string>
 ) => {
   /**
    * DONE: validate request body to match create movie criteria
    * DONE: create movie
    * */
+  let genres = await Genre.find({
+    where: { genre_id: In(req.body.genreId) },
+  });
 
-  const { title, dailyRentalRate, numberInStock, genreId } = req.body;
-  const movie = await pool.query(createMovie, [
-    title,
-    genreId,
-    numberInStock,
-    dailyRentalRate,
-  ]);
-  return res.send(movie.rows[0]);
+  if (genres.length < req.body.genreId.length)
+    return res.status(404).send("invalid genreId");
+
+  const movieEntry = {
+    ...req.body,
+    genres,
+  };
+
+  const movie2 = await Movie.create(movieEntry).save();
+
+  return res.send(movie2);
 };
 
 export const updateMovieController = async (
   req: Request<{ id: string }, {}, updateMovieInput>,
-  res: Response<createMovieInput>
+  res: Response
 ) => {
   /**
    * DONE: validate movie id in parameters
    * DONE: validate request body to check if it match criteria
    * DONE: update movie
    */
-  const movie = await pool.query(
-    pg_format(updateMovie, "title", req.body.title, req.params.id)
-  );
-  return res.send(movie.rows[0]);
+  const id: number = parseInt(req.params.id as string);
+
+  let movie = await Movie.createQueryBuilder("movies")
+    .update(Movie)
+    .set(req.body)
+    .where("movie_id = :id ", { id })
+    .returning("*")
+    .execute();
+
+  return res.send(movie);
 };
 
 export const deleteMovieController = async (
   req: Request<{ id: string }>,
-  res: Response<boolean>
+  res: Response<{ deleted: boolean; message: string }>
 ) => {
   /**
    * DONE: validate if movie id exists
    * DONE: delete movie
    */
-  await pool.query(deleteMovie, [req.params.id]);
-  res.send(true);
+
+  const id: number = parseInt(req.params.id as string);
+  await Movie.createQueryBuilder("movies")
+    .delete()
+    .from(Movie)
+    .where("movie_id=:id", { id })
+    .execute();
+  return res.send({ deleted: true, message: "customer deleted succesfully" });
 };

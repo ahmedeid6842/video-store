@@ -1,12 +1,15 @@
-import { Pool } from "pg";
+import { DataSource } from "typeorm";
 import config from "config";
+import { User, Customer, Genre, Movie, Rental } from "./entities";
 
-const pool = new Pool({
-  user: config.get<string>("PG_USER"),
+export default new DataSource({
+  type: "postgres",
+  username: config.get<string>("PG_USER"),
   host: config.get<string>("PG_HOST"),
   database: config.get<string>("PG_DATABASE"),
   port: config.get<number>("PG_PORT"),
   password: config.get<string>("PG_PASSWORD"),
+  synchronize: process.env.NODE_ENV !== "production",
+  logging: process.env.NODE_ENV !== "production",
+  entities: [User, Customer, Movie, Genre, Rental],
 });
-
-export default pool;

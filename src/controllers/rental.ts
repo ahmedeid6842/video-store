@@ -1,42 +1,44 @@
-import pg_format from "pg-format";
-import { Request, Response } from "express";
 import moment from "moment";
-import pool from "../database/connect";
-import { Rental } from "../types/Rental";
-import {
-  getRental,
-  getRentals,
-  addRental,
-  updateRentalFee,
-} from "../database/queries/rental";
-import { getMovie, updateMovie,updateMovieNumberInStock } from "../database/queries/movie";
-
+import { Request, Response } from "express";
 import { rentalPrice } from "../utils/rentalPrice";
-import { createRentalInput } from "src/validators/rental";
+import { createRentalInput } from "../validators/rental";
+import { Customer, Movie, Rental } from "../database/entities";
+import dataSource from "../database/connect";
 
-export const getRentalsContrller = async ({}, res: Response<Rental[]>) => {
+export const getRentalsContrller = async (
+  req: Request<
+    {},
+    {},
+    { dateOut?: Date; dateReturned?: Date; customer?: number; movie?: number }
+  >,
+  res: Response
+) => {
   /**
    * DONE: return all rentals in the shop
    */
-  const rentals = await pool.query(getRentals);
-  return res.send(rentals.rows);
-};
+  let querySrting = " ";
+  let queryKeys = Object.keys(req.query);
 
-export const getRentalController = async (
-  req: Request<{ customerId: string; movieId: string }>,
-  res: Response<Rental | string>
-) => {
-  /**
-   * DONE: validate if rental exists or not
-   * DONE: return rental
-   */
-  const rental = await pool.query(getRental, [
-    req.params.customerId,
-    req.params.movieId,
-  ]);
-  if (!rental.rows.length)
-    return res.send("not rental found check customer or movie id ");
-  return res.send(rental.rows[0]);
+  for (let index = 0; index < queryKeys.length; index++) {
+    if (req.query[queryKeys[index]] === "customer") {
+      querySrting += `customers.customer_id = ${req.query[queryKeys[index]]} `;
+    } else {
+      querySrting += `
+      rentals.${queryKeys[index]} = ${req.query[queryKeys[index]]} `;
+    }
+    if (index < queryKeys.length - 1) {
+      querySrting += `AND`;
+    }
+  }
+
+  const rentals = await dataSource
+    .getRepository(Rental)
+    .createQueryBuilder("rentals")
+    .leftJoinAndSelect("rentals.customer", "customers")
+    .where(querySrting)
+    .getMany();
+
+  res.send(rentals);
 };
 
 export const addRentalController = async (
@@ -48,60 +50,61 @@ export const addRentalController = async (
    * DONE: decrease movie number in stock
    * DONE: add new rental
    */
-  const movie = await pool.query(getMovie, [req.body.movieId]);
-  if (!movie.rows.length) return res.send("no movie found with that id ");
+  const movie = await Movie.findOne({ where: { movie_id: req.body.movieId } });
+  if (!movie) return res.send("no movie found with that id ");
 
-  await pool.query(
-    pg_format(
-      updateMovie,
-      "numberinstock",
-      movie.rows[0].numberinstock - 1,
-      req.body.movieId
-    )
-  );
-  const rental = await pool.query(addRental, [
-    req.body.movieId,
-    req.body.customerId,
-  ]);
+  const customer = await Customer.findOne({
+    where: { customer_id: req.body.customerId },
+  });
+  if (!customer) return res.send("no customer found with that id");
 
-  return res.send(rental.rows[0]);
+  let rental;
+  await dataSource.transaction(async () => {
+    movie.numberInStock -= 1;
+    await movie.save();
+
+    rental = await Rental.create({
+      customer,
+      movie,
+    }).save();
+  });
+  return res.send(rental);
 };
 
 export const backRentalController = async (
-  req: Request<{ customerId: string; movieId: string }>,
+  req: Request<{ rentalId: string }, {}, {}, { dateOut?: Date }>,
   res: Response<Rental | string>
 ) => {
   /**
    * DONE: validate if rental exist or not
    * DONE: calculate rental price using rentalPrice util function
    * DONE: update rental table to contain movie's date returned and rental fee
-   * DONE: update movie number in stock 
+   * DONE: update movie number in stock
    * DONE: add transaction to commit both update movie and rental
    * DONE: return the rental
    */
-  let rental = await pool.query(getRental, [
-    req.params.customerId,
-    req.params.movieId,
-  ]);
-  if (!rental.rows.length) return res.status(404).send("no rental found");
-  
-  await pool.query("BEGIN");
-  
-  await pool.query(pg_format(updateMovieNumberInStock, 1, req.params.movieId));
+  const rental_id: number = parseInt(req.params.rentalId as string);
+  const rental = await dataSource
+    .getRepository(Rental)
+    .createQueryBuilder("rentals")
+    .leftJoinAndSelect("rentals.movie", "movies")
+    .where("rentals.rental_id = :id", { id: rental_id })
+    .getOne();
+  if (!rental) return res.status(404).send("no rental found");
 
-  const rentalFee = rentalPrice(
-    rental.rows[0].dateOut,
-    rental.rows[0].dailyrentalrate
-  );
+  await dataSource.transaction(async () => {
+    rental.rentalFee = rentalPrice(
+      rental.dateOut,
+      rental.movie.dailyRentalRate
+    );
+    rental.dateReturned = moment().format("YYYY-MM-DD");
+    await rental.save();
 
-  rental = await pool.query(updateRentalFee, [
-    rentalFee.toFixed(2),
-    moment().format("YYYY-MM-DD"),
-    req.params.customerId,
-    req.params.movieId,
-  ]);
+    await Movie.update(
+      { movie_id: rental.movie.movie_id },
+      { numberInStock: rental.movie.numberInStock + 1 }
+    );
+  });
 
-  await pool.query("COMMIT");
-  
-  return res.send(rental.rows[0]);
+  return res.send(rental);
 };
