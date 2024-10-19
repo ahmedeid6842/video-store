@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "start": "ts-node src/server.ts",
-    "build": "npm install"
+    "build": "npm install",
+    "test": "vitest",
+    "test:cov": "vitest run --coverage"
   },
   "author": "",
   "license": "ISC",
+  "type": "module",
   "dependencies": {
     "bcrypt": "^5.1.0",
     "config": "^3.3.1",
@@ -31,6 +34,8 @@
     "@types/lodash": "^4.14.191",
     "@types/node": "^18.13.0",
     "@types/pg": "^8.6.6",
-    "ts-node": "^10.9.1"
+    "@vitest/coverage-v8": "^2.1.3",
+    "ts-node": "^10.9.1",
+    "vitest": "^2.1.3"
   }
 }
