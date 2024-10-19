@@ -4,13 +4,13 @@ import { Genre, Movie } from "../database/entities";
 import { createMovieInput, updateMovieInput } from "../validators/movie";
 
 export const getMovieController = async (
-  req: Request<{ id: number }>,
+  req: Request<{ id: string }, {}, {}>,
   res: Response<Omit<createMovieInput, "genreId"> | string>
 ) => {
   /**
    * DONE: check if provided id found or not
    */
-  const movie = await Movie.findOne({ where: { movie_id: req.params.id } });
+  const movie = await Movie.findOne({ where: { movie_id: parseInt(req.params.id) } });
   if (!movie) return res.status(404).send("no file with that id ");
 
   return res.send(movie);
@@ -77,5 +77,5 @@ export const deleteMovieController = async (
     .from(Movie)
     .where("movie_id=:id", { id })
     .execute();
-  return res.send({ deleted: true, message: "customer deleted succesfully" });
+  return res.send({ deleted: true, message: "movie deleted succesfully" });
 };
