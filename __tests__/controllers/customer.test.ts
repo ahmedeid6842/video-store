@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { Request, Response } from 'express';
 import { Customer } from "../../src/database/entities/customer";
-import { createCustomerController, deleteCustomerController, getCustomerController, updateCustomerController } from 'src/controllers/customer';
+import { createCustomerController, deleteCustomerController, getCustomerController, updateCustomerController } from '../../src/controllers/customer';
 import { createCustomerInput } from 'src/validators/customer';
 
 vi.mock("../../src/database/entities/customer", () => ({
